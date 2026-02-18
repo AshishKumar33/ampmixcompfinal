@@ -4,7 +4,7 @@ Compare Amplitude and Mixpanel event payloads side by side: match keys (includin
 
 ## Live demo
 
-**https://ashishkumar33.github.io/ampmixcomp/**
+**https://ashishkumar33.github.io/ampmixcompfinal/**
 
 *(Enable GitHub Pages in repo **Settings → Pages → Source: GitHub Actions** if not already on.)*
 
