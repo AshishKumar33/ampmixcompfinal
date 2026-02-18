@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amplitude vs Mixpanel Schema Compare</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-hover: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-amp: #f778ba;
+      --accent-mix: #7ee787;
+      --match: #3fb950;
+      --diff: #d29922;
+      --danger: #f85149;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 1rem 1.5rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+      max-width: 320px;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    input[type="search"],
+    select {
+      width: 100%;
+      padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    input[type="search"]:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+    }
+
+    select {
+      padding-left: 0.75rem;
+      cursor: pointer;
+      min-width: 140px;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-hover);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--border);
+      border-color: var(--text-muted);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      height: calc(100vh - 56px);
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    main.only-compare {
+      grid-template-columns: 1fr;
+    }
+    main.only-compare .panel:not(.panel-common) {
+      display: none;
+    }
+
+    @media (max-width: 1200px) {
+      main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr;
+      }
+    }
+
+    .panel {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .panel:last-child {
+      border-right: none;
+    }
+
+    .panel-header {
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .panel-header.amplitude { color: var(--accent-amp); }
+    .panel-header.mixpanel { color: var(--accent-mix); }
+    .panel-header.common { color: var(--match); }
+
+    .panel-content {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      overflow: hidden;
+    }
+
+    .panel-content .view-tabs {
+      flex-shrink: 0;
+      padding: 0.5rem 1rem 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .panel-view-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      overflow-x: auto;
+      padding: 1rem;
+    }
+
+    .view-tabs {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .view-tab {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .view-tab.active {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+
+    .view-tab:hover:not(.active) {
+      color: var(--text);
+    }
+
+    .json-block {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .json-key { color: #79c0ff; }
+    .json-string { color: #0e639c; }
+    .json-number { color: #098658; }
+    .json-boolean-true { color: #098658; }
+    .json-boolean-false { color: #d2691e; }
+    .json-boolean { color: #ff7b72; }
+    .json-null { color: var(--text-muted); }
+    .json-bracket { color: var(--text-muted); }
+
+    .panel-content-common {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .panel-content-common .comparison-table-wrap {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .panel-content-common .same-value-section {
+      flex-shrink: 0;
+      max-height: 40vh;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-content-common .same-value-section .comparison-table-wrap {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .comparison-table-wrap {
+      overflow: auto;
+      overflow-x: auto;
+      overflow-y: auto;
+    }
+
+    .comparison-table-inner {
+      min-width: min-content;
+    }
+
+    .comparison-header {
+      display: grid;
+      grid-template-columns: 2.5em minmax(120px, 1fr) 1fr 1fr;
+      gap: 0.5rem 1rem;
+      padding: 0.5rem 0.5rem 0.5rem 1rem;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      flex-shrink: 0;
+      box-shadow: 0 1px 0 var(--border);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 2.5em minmax(120px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr);
+      gap: 0.5rem 1rem;
+      padding: 0.35rem 0.5rem;
+      border-radius: 4px;
+      align-items: start;
+      font-size: 12px;
+    }
+
+    .row-num {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-align: right;
+      user-select: none;
+    }
+
+    .row:hover {
+      background: var(--surface-hover);
+    }
+
+    .row.match .val-amp,
+    .row.match .val-mix { color: var(--match); }
+    .row.diff .val-amp,
+    .row.diff .val-mix {
+      background: rgba(210, 153, 34, 0.25);
+      border-radius: 4px;
+      padding: 0.2rem 0.4rem;
+      margin: 0 -0.4rem;
+    }
+    .row.diff .val-amp { color: var(--accent-amp); }
+    .row.diff .val-mix { color: var(--accent-mix); }
+
+    .row .key {
+      font-weight: 500;
+      color: var(--accent);
+      white-space: nowrap;
+      overflow-x: auto;
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .path-warning {
+      font-size: 0.65rem;
+      color: var(--diff);
+      background: rgba(210, 153, 34, 0.15);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .row .val-amp,
+    .row .val-mix {
+      word-break: break-word;
+      white-space: pre-wrap;
+      color: var(--text);
+    }
+
+
+    .tree-node {
+      margin-left: 1rem;
+      border-left: 1px solid var(--border);
+      padding-left: 0.5rem;
+    }
+
+    .tree-branch > .key-line {
+      cursor: pointer;
+    }
+
+    .tree-node .key-line {
+      padding: 0.15rem 0;
+      display: flex;
+      align-items: baseline;
+      gap: 0.35rem;
+    }
+
+    .tree-node .key-line:hover,
+    .tree-branch > .key-line:hover {
+      color: var(--accent);
+    }
+
+    .tree-node .key-line .expand {
+      font-size: 10px;
+      color: var(--text-muted);
+      width: 14px;
+    }
+
+    .tree-node .key-line .k { color: #79c0ff; }
+    .tree-node .key-line .v { color: #a5d6ff; }
+
+    .tree-branch.collapsed > .tree-node { display: none; }
+    .tree-branch.collapsed > .key-line .expand { transform: rotate(-90deg); }
+
+    .hidden { display: none !important; }
+
+    .empty-msg {
+      color: var(--text-muted);
+      padding: 1rem;
+      font-style: italic;
+    }
+
+    .stats {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    mark {
+      background: rgba(210, 153, 34, 0.35);
+      color: inherit;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+
+    .copy-btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.7rem;
+    }
+
+    .input-section {
+      padding: 1rem 1.5rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .input-section h2 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .input-editors {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      min-height: 220px;
+    }
+
+    @media (max-width: 900px) {
+      .input-editors { grid-template-columns: 1fr; }
+    }
+
+    .input-editor-wrap {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      color: #1e1e1e;
+    }
+
+    .input-editor-wrap.error { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+    .input-editor-wrap .label {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-bottom: 1px solid #e0e0e0;
+      background: #f5f5f5;
+    }
+    .input-editor-wrap.amp .label { color: #c2185b; }
+    .input-editor-wrap.mix .label { color: #2e7d32; }
+
+    .editor-with-lines {
+      display: flex;
+      flex: 1;
+      min-height: 180px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .line-numbers {
+      padding: 8px 10px 8px 12px;
+      background: #fafafa;
+      border-right: 1px solid #e0e0e0;
+      color: #6e7681;
+      text-align: right;
+      user-select: none;
+      width: 2.5em;
+      min-width: 2.5em;
+      flex-shrink: 0;
+      white-space: pre;
+      overflow: hidden;
+    }
+
+    .editor-with-lines textarea {
+      flex: 1;
+      min-width: 0;
+      padding: 8px 10px;
+      border: none;
+      resize: none;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+      color: #1e1e1e;
+      background: #fff;
+    }
+
+    .editor-with-lines textarea:focus { outline: none; }
+
+    .input-error {
+      font-size: 0.75rem;
+      color: var(--danger);
+      padding: 0.35rem 0.75rem;
+      background: rgba(248, 81, 73, 0.1);
+      border-top: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    .compare-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .compare-bar .btn-primary { flex-shrink: 0; }
+
+    .json-viewer-wrap {
+      position: relative;
+      padding-left: 2.5em;
+    }
+
+    .json-viewer-wrap .line-nums {
+      position: absolute;
+      left: 0;
+      top: 0;
+      padding: 8px 6px 8px 12px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: right;
+      user-select: none;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .input-section.collapsed .input-editors,
+    .input-section.collapsed .compare-bar { display: none; }
+    .input-section.collapsed .input-section-header { margin-bottom: 0; }
+
+    .input-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .input-section-header h2 { margin-bottom: 0; }
+
+    .same-value-table .comparison-header {
+      grid-template-columns: 2.5em minmax(100px, 1fr) minmax(100px, 1fr) 1fr;
+    }
+    .same-value-table .row {
+      grid-template-columns: 2.5em minmax(100px, 1fr) minmax(100px, 1fr) 1fr;
+    }
+
+    .instructions {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding: 0.5rem 0.75rem;
+      background: var(--surface-hover);
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+    .instructions summary { cursor: pointer; font-weight: 500; color: var(--text); }
+
+    .key-help {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-left: 0.25rem;
+      cursor: help;
+      text-decoration: none;
+      border-bottom: 1px dotted var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📊 Amplitude vs Mixpanel — Schema Compare</h1>
+    <div class="controls">
+      <div class="search-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        <input type="search" id="search" placeholder="Search by key or value..." />
+      </div>
+      <select id="filter">
+        <option value="all">All keys</option>
+        <option value="common">Common keys only</option>
+        <option value="amp-only">Amplitude only</option>
+        <option value="mix-only">Mixpanel only</option>
+      </select>
+      <select id="sort">
+        <option value="key-asc">Sort: Key A–Z</option>
+        <option value="key-desc">Sort: Key Z–A</option>
+        <option value="value-asc">Sort: Value A–Z</option>
+        <option value="value-desc">Sort: Value Z–A</option>
+        <option value="match">Same value first</option>
+      </select>
+      <button type="button" class="btn btn-primary" id="beautify-all">Beautify JSON</button>
+      <button type="button" class="btn" id="btn-only-compare" title="Hide Amplitude and Mixpanel panels">Only comparison</button>
+    </div>
+  </header>
+
+  <section class="input-section" id="input-section">
+    <div class="input-section-header">
+      <h2>Paste or edit JSON (both payloads can change)</h2>
+      <button type="button" class="btn" id="btn-hide-input" title="Hide input area">Hide input</button>
+    </div>
+    <details class="instructions">
+      <summary>How to use</summary>
+      Paste Amplitude JSON (left) and Mixpanel JSON (right), then click <strong>Compare</strong>. Use Search/Filter/Sort to narrow results. &quot;Same value, different key&quot; shows pairs where the value matches but key names differ (e.g. <code>device_id</code> vs <code>$device_id</code>).
+    </details>
+    <details class="instructions">
+      <summary>Key abbreviations (Mixpanel)</summary>
+      Some keys are shortened in the payload. Hover over a key in the Tree view for a tooltip. Common: <code>$c</code> = current URL, <code>$r</code> = referrer, <code>$b</code> = browser, <code>$o</code> = OS, <code>$mp_</code> = Mixpanel internal.
+    </details>
+    <div class="input-editors">
+      <div class="input-editor-wrap amp" id="wrap-amp">
+        <div class="label">Amplitude</div>
+        <div class="editor-with-lines">
+          <div class="line-numbers" id="line-nums-amp">1</div>
+          <textarea id="input-amp" spellcheck="false" placeholder="Paste Amplitude JSON..."></textarea>
+        </div>
+        <div class="input-error hidden" id="error-amp"></div>
+      </div>
+      <div class="input-editor-wrap mix" id="wrap-mix">
+        <div class="label">Mixpanel</div>
+        <div class="editor-with-lines">
+          <div class="line-numbers" id="line-nums-mix">1</div>
+          <textarea id="input-mix" spellcheck="false" placeholder="Paste Mixpanel JSON..."></textarea>
+        </div>
+        <div class="input-error hidden" id="error-mix"></div>
+      </div>
+    </div>
+    <div class="compare-bar">
+      <button type="button" class="btn btn-primary" id="btn-compare">Compare</button>
+      <button type="button" class="btn" id="btn-beautify-input">Beautify inputs</button>
+      <button type="button" class="btn" id="btn-clear">Clear</button>
+      <span class="stats" id="parse-status"></span>
+    </div>
+  </section>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header amplitude">Amplitude</div>
+      <div class="panel-content">
+        <div class="view-tabs">
+          <button type="button" class="view-tab active" data-panel="amp" data-view="tree">Tree</button>
+          <button type="button" class="view-tab" data-panel="amp" data-view="json">JSON</button>
+          <button type="button" class="btn copy-btn" id="copy-amp" title="Copy JSON">Copy</button>
+        </div>
+        <div class="panel-view-scroll">
+          <div id="amp-tree" class="json-block"></div>
+          <pre id="amp-json" class="json-block hidden"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header mixpanel">Mixpanel</div>
+      <div class="panel-content">
+        <div class="view-tabs">
+          <button type="button" class="view-tab active" data-panel="mix" data-view="tree">Tree</button>
+          <button type="button" class="view-tab" data-panel="mix" data-view="json">JSON</button>
+          <button type="button" class="btn copy-btn" id="copy-mix" title="Copy JSON">Copy</button>
+        </div>
+        <div class="panel-view-scroll">
+          <div id="mix-tree" class="json-block"></div>
+          <pre id="mix-json" class="json-block hidden"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel panel-common">
+      <div class="panel-header common">
+        Common keys
+        <span class="stats" id="common-stats"></span>
+      </div>
+      <div class="panel-content panel-content-common">
+        <div class="comparison-table-wrap">
+          <div class="comparison-table-inner">
+            <div class="comparison-header">
+              <span>#</span>
+              <span>Key</span>
+              <span>Amplitude</span>
+              <span>Mixpanel</span>
+            </div>
+            <div id="common-list"></div>
+          </div>
+        </div>
+        <div class="same-value-section">
+          <div class="panel-header common" style="margin-bottom: 0.5rem;">Same value, different key</div>
+          <div class="comparison-table-wrap same-value-table">
+            <div class="comparison-table-inner">
+              <div class="comparison-header">
+                <span>#</span>
+                <span>Amplitude key</span>
+                <span>Mixpanel key</span>
+                <span>Value</span>
+              </div>
+              <div id="same-value-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const defaultAmplitude = {"_time":1771432945458,"$insert_id":"5c12be03-252f-4b8e-a085-3bc88966ddd4","$schema":13,"amplitude_attribution_ids":null,"amplitude_id":133068988286,"app":362946,"city":"Noida","client_event_time":"2026-02-18 16:42:25.458000","client_upload_time":"2026-02-18 16:42:26.842000","country":"India","data":{"group_first_event":{},"group_ids":{},"path":"/2/httpapi"},"device_carrier":null,"device_family":"Mac","device_id":"c861863a-9fae-476b-98cb-9dd5c6897703","device_type":"Mac","display_name":"bookingConfirmation","dma":null,"event_id":5,"event_properties":{"deviceId":"c861863a-9fae-476b-98cb-9dd5c6897703","eventAction":"impression","eventCategory":"bookingConfirmation","eventLabel":"hotelReschedule","platform":"dweb","tiketSessionId":"46a12f1e-af64-4194-b62a-7aa957e0c786","trackingId":"UA-122503490-1","user.currency":"IDR","user.language":"EN","user.loginType":"TIKET","user.signupType":"TIKET","user.userId":"30178877","utmCampaign":"none","utmExternal":"organic","utmMedium":"none","utmSource":"none","vertical":"hotel"},"event_time":"2026-02-18 16:42:25.458000","event_type":"bookingConfirmation","group_properties":{},"groups":{},"ip_address":"122.161.66.20","language":"English","library":"amplitude-ts/1.10.2","location_lat":null,"location_lng":null,"os":"Chrome 144.0.0.0","os_name":"Chrome","os_version":"144.0.0.0","partner_id":null,"paying":null,"plan":{},"platform":"Web","processed_time":"2026-02-18 16:42:27.834000","region":"Uttar Pradesh","sample_rate":null,"server_received_time":"2026-02-18 16:42:26.842000","server_upload_time":"2026-02-18 16:42:26.845000","session_id":1771432872063,"source_id":null,"start_version":null,"timeline_hidden":false,"user_id":"30178877","user_properties":{"country":"SG","currency":"IDR","deviceId":"c861863a-9fae-476b-98cb-9dd5c6897703","isB2bCorp":"false","language":"EN","loginType":"TIKET","miniappsPartner":"none","referrer":"none","signupType":"TIKET","tagmpid":"none","tagttoclid":"none","tiketSessionId":"46a12f1e-af64-4194-b62a-7aa957e0c786","ttoclid":"none","userId":"30178877","utmCampaign":"none","utmExternal":"organic","utmId":"none","utmMedium":"none","utmSource":"none","utmTerm":"none"},"uuid":"23cbd1c1-cac4-418c-bd62-a445bc6dd113","version_name":null};
+
+    const defaultMixpanel = {"event":"bookingConfirmation","properties":{"time":1771432945.438,"distinct_id":"30178877","$browser":"Chrome","$browser_version":144,"$city":"Noida","$current_url":"https://gatotkaca.tiket.com/en-sg/hotel/bookings/reschedule/checkout?orderId=1200876590&orderDetailId=1200958331&orderHash=4793EC2E15C7B7C5699579A3&adult=1&hotelId=kartika-chandra-hotel-108001534490281736&childAges=&night=1&room=1&roomId=5b77803e25a8fa6a6","$device_id":"c861863a-9fae-476b-98cb-9dd5c6897703","$initial_referrer":"https://gatotkaca.tiket.com/en-sg/hotel/bookings/reschedule?orderId=1200876590&orderDetailId=1200958331&orderHash=4793EC2E15C7B7C5699579A3&startDate=2026-03-13&night=1","$initial_referring_domain":"gatotkaca.tiket.com","$insert_id":"rxk89rhlh2nwfzlr","$lib_version":"2.73.0","$mp_api_endpoint":"api-js.mixpanel.com","$mp_api_timestamp_ms":1771432947460,"$mp_event_size":2121,"$mp_replay_id":"ed6fc8e1-9426-4b28-8fde-72bd7fd0b461","$os":"Mac OS X","$referrer":"https://gatotkaca.tiket.com/en-sg/hotel/bookings/reschedule?orderId=1200876590&orderDetailId=1200958331&orderHash=4793EC2E15C7B7C5699579A3&startDate=2026-03-13&night=1","$referring_domain":"gatotkaca.tiket.com","$region":"Uttar Pradesh","$screen_height":900,"$screen_width":1440,"$user_id":"30178877","commonAnalyticVersion":"0.0.0-alpha-1045-20260218033155","country":"SG","currency":"IDR","deviceId":"c861863a-9fae-476b-98cb-9dd5c6897703","eventAction":"impression","eventCategory":"bookingConfirmation","eventLabel":"hotelReschedule","isB2bCorp":"false","isEmailVerified":1,"isGuest":0,"isPhoneVerified":1,"language":"EN","loginType":"TIKET","miniappsPartner":"none","mp_country_code":"IN","mp_lib":"web","mp_processing_time_ms":1771432952835,"mp_sent_by_lib_version":"2.73.0","platform":"dweb","referrer":"none","signupType":"TIKET","tagmpid":"none","tagttoclid":"none","tiketSessionId":"46a12f1e-af64-4194-b62a-7aa957e0c786","trackingId":"UA-122503490-1","ttoclid":"none","unmUserId":"100007647","user":{"currency":"IDR","language":"EN","loginType":"TIKET","signupType":"TIKET","userId":"30178877"},"userId":"30178877","utmAttributedAt":"2026-02-18T22:57:38","utmCampaign":"none","utmContent":"none","utmExternal":"organic","utmId":"none","utmMedium":"none","utmSource":"none","utmTerm":"none","vertical":"hotel"}};
+
+    let amplitudeData = JSON.parse(JSON.stringify(defaultAmplitude));
+    let mixpanelData = JSON.parse(JSON.stringify(defaultMixpanel));
+
+    // Line numbers for textareas
+    function updateLineNumbers(textareaId, lineNumsId) {
+      const ta = document.getElementById(textareaId);
+      const nums = document.getElementById(lineNumsId);
+      if (!ta || !nums) return;
+      const lines = (ta.value || '').split('\n').length;
+      nums.textContent = Array.from({ length: Math.max(1, lines) }, (_, i) => i + 1).join('\n');
+    }
+
+    function syncScroll(textareaId, lineNumsId) {
+      const ta = document.getElementById(textareaId);
+      const nums = document.getElementById(lineNumsId);
+      if (ta && nums) nums.scrollTop = ta.scrollTop;
+    }
+
+    function initInputs() {
+      const inputAmp = document.getElementById('input-amp');
+      const inputMix = document.getElementById('input-mix');
+      if (inputAmp) inputAmp.value = JSON.stringify(defaultAmplitude, null, 2);
+      if (inputMix) inputMix.value = JSON.stringify(defaultMixpanel, null, 2);
+      updateLineNumbers('input-amp', 'line-nums-amp');
+      updateLineNumbers('input-mix', 'line-nums-mix');
+      ['input-amp', 'input-mix'].forEach(id => {
+        const ta = document.getElementById(id);
+        const lineNumsId = id === 'input-amp' ? 'line-nums-amp' : 'line-nums-mix';
+        if (ta) {
+          ta.addEventListener('input', () => updateLineNumbers(id, lineNumsId));
+          ta.addEventListener('scroll', () => syncScroll(id, lineNumsId));
+        }
+      });
+    }
+
+    function showInputError(which, msg) {
+      const wrap = document.getElementById('wrap-' + which);
+      const err = document.getElementById('error-' + which);
+      wrap.classList.toggle('error', !!msg);
+      err.classList.toggle('hidden', !msg);
+      err.textContent = msg || '';
+    }
+
+    function parseAndCompare() {
+      const ampRaw = document.getElementById('input-amp').value.trim();
+      const mixRaw = document.getElementById('input-mix').value.trim();
+      let ampOk = false, mixOk = false;
+      try {
+        amplitudeData = ampRaw ? JSON.parse(ampRaw) : {};
+        ampOk = true;
+        showInputError('amp', '');
+      } catch (e) {
+        showInputError('amp', 'Invalid JSON: ' + e.message);
+      }
+      try {
+        mixpanelData = mixRaw ? JSON.parse(mixRaw) : {};
+        mixOk = true;
+        showInputError('mix', '');
+      } catch (e) {
+        showInputError('mix', 'Invalid JSON: ' + e.message);
+      }
+      document.getElementById('parse-status').textContent = ampOk && mixOk ? 'Both parsed. Comparison updated.' : '';
+      if (!ampOk || !mixOk) return;
+      refreshComparison();
+    }
+
+    function refreshComparison() {
+      commonRows = allCommonRows();
+      renderTree('amp-tree', amplitudeData);
+      renderTree('mix-tree', mixpanelData);
+      bindTreeCollapse('amp-tree');
+      bindTreeCollapse('mix-tree');
+      renderCommonList();
+      renderSameValueList();
+      if (document.getElementById('amp-json').classList.contains('hidden') === false) renderJson('amp-json', amplitudeData);
+      if (document.getElementById('mix-json').classList.contains('hidden') === false) renderJson('mix-json', mixpanelData);
+    }
+
+    const btnCompare = document.getElementById('btn-compare');
+    if (btnCompare) btnCompare.addEventListener('click', parseAndCompare);
+
+    const btnBeautifyInput = document.getElementById('btn-beautify-input');
+    if (btnBeautifyInput) btnBeautifyInput.addEventListener('click', () => {
+      try {
+        const amp = document.getElementById('input-amp').value.trim();
+        const mix = document.getElementById('input-mix').value.trim();
+        if (amp) document.getElementById('input-amp').value = JSON.stringify(JSON.parse(amp), null, 2);
+        if (mix) document.getElementById('input-mix').value = JSON.stringify(JSON.parse(mix), null, 2);
+        updateLineNumbers('input-amp', 'line-nums-amp');
+        updateLineNumbers('input-mix', 'line-nums-mix');
+      } catch (_) {}
+    });
+
+    const btnClear = document.getElementById('btn-clear');
+    if (btnClear) btnClear.addEventListener('click', () => {
+      if (!confirm('Do you want to delete input data and clear the comparison?')) return;
+      const inputAmp = document.getElementById('input-amp');
+      const inputMix = document.getElementById('input-mix');
+      if (inputAmp) inputAmp.value = '';
+      if (inputMix) inputMix.value = '';
+      amplitudeData = {};
+      mixpanelData = {};
+      updateLineNumbers('input-amp', 'line-nums-amp');
+      updateLineNumbers('input-mix', 'line-nums-mix');
+      showInputError('amp', '');
+      showInputError('mix', '');
+      document.getElementById('parse-status').textContent = '';
+      refreshComparison();
+    });
+
+    // Key abbreviations (e.g. Mixpanel short names) — show full meaning on hover
+    const KEY_ABBREVIATIONS = {
+      '$c': 'current URL ($current_url)',
+      '$r': 'referrer ($referrer)',
+      '$b': 'browser ($browser)',
+      '$o': 'operating system ($os)',
+      '$d': 'device id ($device_id)',
+      '$u': 'user id ($user_id)',
+      'c': 'current URL (Mixpanel abbreviates as $c)',
+      'r': 'referrer (Mixpanel: $r)'
+    };
+
+    // Flatten object to dotted keys
+    function flatten(obj, prefix = '') {
+      const out = {};
+      for (const [k, v] of Object.entries(obj)) {
+        const key = prefix ? `${prefix}.${k}` : k;
+        if (v !== null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length > 0) {
+          Object.assign(out, flatten(v, key));
+        } else {
+          out[key] = v;
+        }
+      }
+      return out;
+    }
+
+    // Mixpanel has event + properties; normalize for comparison (properties.* and event)
+    // Treat $key as key (e.g. $device_id → device_id) so Amplitude and Mixpanel match
+    function mixpanelFlat(data) {
+      const flat = data && data.event !== undefined ? { event: data.event } : {};
+      const props = (data && data.properties) || {};
+      for (const [k, v] of Object.entries(props)) {
+        const key = k.startsWith('$') ? k.slice(1) : k;
+        if (v !== null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length > 0) {
+          Object.assign(flat, flatten({ [key]: v }, key));
+        } else {
+          flat[key] = v;
+        }
+      }
+      return flat;
+    }
+
+    function leafOf(key) {
+      const parts = key.split('.');
+      return parts[parts.length - 1] || key;
+    }
+
+    function allCommonRows() {
+      const flatAmp = flatten(amplitudeData);
+      const flatMix = mixpanelFlat(mixpanelData);
+      const leafToAmp = {};
+      const leafToMix = {};
+      for (const [k, v] of Object.entries(flatAmp)) {
+        const leaf = leafOf(k);
+        if (!leafToAmp[leaf]) leafToAmp[leaf] = { fullKey: k, value: v };
+      }
+      for (const [k, v] of Object.entries(flatMix)) {
+        const leaf = leafOf(k);
+        if (!leafToMix[leaf]) leafToMix[leaf] = { fullKey: k, value: v };
+      }
+      const leaves = new Set([...Object.keys(leafToAmp), ...Object.keys(leafToMix)]);
+      return Array.from(leaves).map(leaf => {
+        const a = leafToAmp[leaf];
+        const m = leafToMix[leaf];
+        const both = !!a && !!m;
+        const pathWarning = both && a.fullKey !== m.fullKey;
+        return {
+          key: leaf,
+          amp: a ? a.value : undefined,
+          mix: m ? m.value : undefined,
+          both,
+          match: both && String(a.value) === String(m.value),
+          pathWarning,
+          ampFullKey: a ? a.fullKey : undefined,
+          mixFullKey: m ? m.fullKey : undefined
+        };
+      });
+    }
+
+    let commonRows = allCommonRows();
+    let searchQuery = '';
+    let sortBy = 'key-asc';
+    let filterMode = 'all';
+
+    function formatVal(v) {
+      if (v === undefined) return '—';
+      if (v === null) return 'null';
+      if (typeof v === 'object') return JSON.stringify(v);
+      return String(v);
+    }
+
+    function renderCommonList() {
+      let rows = [...commonRows];
+
+      if (filterMode === 'common') rows = rows.filter(r => r.both);
+      else if (filterMode === 'amp-only') rows = rows.filter(r => r.amp !== undefined && r.mix === undefined);
+      else if (filterMode === 'mix-only') rows = rows.filter(r => r.mix !== undefined && r.amp === undefined);
+
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        rows = rows.filter(r => {
+          const keyMatch = r.key.toLowerCase().includes(q);
+          const ampMatch = formatVal(r.amp).toLowerCase().includes(q);
+          const mixMatch = formatVal(r.mix).toLowerCase().includes(q);
+          return keyMatch || ampMatch || mixMatch;
+        });
+      }
+
+      if (sortBy === 'key-asc') rows.sort((a, b) => a.key.localeCompare(b.key));
+      else if (sortBy === 'key-desc') rows.sort((a, b) => b.key.localeCompare(a.key));
+      else if (sortBy === 'value-asc') rows.sort((a, b) => formatVal(a.amp).localeCompare(formatVal(b.amp)));
+      else if (sortBy === 'value-desc') rows.sort((a, b) => formatVal(b.amp).localeCompare(formatVal(a.amp)));
+      else if (sortBy === 'match') rows.sort((a, b) => (b.match ? 1 : 0) - (a.match ? 1 : 0) || a.key.localeCompare(b.key));
+
+      const list = document.getElementById('common-list');
+      const stats = document.getElementById('common-stats');
+      if (!list) return;
+      const bothCount = commonRows.filter(r => r.both).length;
+      const matchCount = commonRows.filter(r => r.match).length;
+      if (stats) stats.textContent = `${bothCount} shared · ${matchCount} same value`;
+
+      function highlightMatch(text, q) {
+      if (!q || !text) return escapeHtml(String(text));
+      const s = escapeHtml(String(text));
+      const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+      return s.replace(re, '<mark>$1</mark>');
+    }
+
+      list.innerHTML = rows.length === 0
+        ? '<div class="empty-msg">No keys match your search.</div>'
+        : rows.map((r, i) => {
+            const cls = r.both ? (r.match ? 'row match' : 'row diff') : 'row';
+            const q = searchQuery;
+            const pathWarningTitle = r.pathWarning
+              ? 'Different parent or none: ' + (r.ampFullKey || '—') + ' vs ' + (r.mixFullKey || '—')
+              : '';
+            const pathWarningBadge = r.pathWarning
+              ? '<span class="path-warning" title="' + escapeHtml(pathWarningTitle) + '">⚠ different path</span>'
+              : '';
+            const keyTitleAttr = KEY_ABBREVIATIONS[r.key] ? ' title="' + escapeHtml(KEY_ABBREVIATIONS[r.key]) + '"' : '';
+            return `<div class="${cls}" data-key="${r.key.replace(/"/g, '&quot;')}">
+              <span class="row-num">${i + 1}</span>
+              <span class="key"${keyTitleAttr}>${q ? highlightMatch(r.key, q) : escapeHtml(r.key)}${pathWarningBadge}</span>
+              <span class="val-amp">${q ? highlightMatch(formatVal(r.amp), q) : escapeHtml(formatVal(r.amp))}</span>
+              <span class="val-mix">${q ? highlightMatch(formatVal(r.mix), q) : escapeHtml(formatVal(r.mix))}</span>
+            </div>`;
+          }).join('');
+    }
+
+    function mixpanelFlatOriginal(data) {
+      const flat = data && data.event !== undefined ? { event: data.event } : {};
+      const props = (data && data.properties) || {};
+      for (const [k, v] of Object.entries(props)) {
+        if (v !== null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length > 0) {
+          Object.assign(flat, flatten({ [k]: v }, k));
+        } else {
+          flat[k] = v;
+        }
+      }
+      return flat;
+    }
+
+    function sameValueDiffKeyRows() {
+      const flatAmp = flatten(amplitudeData);
+      const flatMixOrig = mixpanelFlatOriginal(mixpanelData);
+      const valueToAmp = {};
+      const valueToMix = {};
+      for (const [k, v] of Object.entries(flatAmp)) {
+        const s = formatVal(v);
+        if (!valueToAmp[s]) valueToAmp[s] = [];
+        valueToAmp[s].push(k);
+      }
+      for (const [k, v] of Object.entries(flatMixOrig)) {
+        const s = formatVal(v);
+        if (!valueToMix[s]) valueToMix[s] = [];
+        valueToMix[s].push(k);
+      }
+      const out = [];
+      const seen = new Set();
+      for (const val of Object.keys(valueToAmp)) {
+        if (!valueToMix[val]) continue;
+        const ampKeys = valueToAmp[val];
+        const mixKeys = valueToMix[val];
+        for (const ak of ampKeys) {
+          for (const mk of mixKeys) {
+            const normMk = mk.startsWith('$') ? mk.slice(1) : mk;
+            if (ak !== normMk && !seen.has(ak + '\0' + mk)) {
+              seen.add(ak + '\0' + mk);
+              out.push({ ampKey: ak, mixKey: mk, value: val });
+            }
+          }
+        }
+      }
+      return out;
+    }
+
+    function renderSameValueList() {
+      const list = document.getElementById('same-value-list');
+      if (!list) return;
+      const rows = sameValueDiffKeyRows();
+      list.innerHTML = rows.length === 0
+        ? '<div class="empty-msg">No same-value, different-key pairs.</div>'
+        : rows.map((r, i) => `<div class="row">
+          <span class="row-num">${i + 1}</span>
+          <span class="key">${escapeHtml(r.ampKey)}</span>
+          <span class="key">${escapeHtml(r.mixKey)}</span>
+          <span class="val-amp">${escapeHtml(r.value)}</span>
+        </div>`).join('');
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    function syntaxHighlight(obj) {
+      const str = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
+      return str
+        .replace(/("(?:[^"\\]|\\.)*")(\s*:)?/g, (m, quoted, colon) => {
+          const cls = colon ? 'json-key' : 'json-string';
+          return '<span class="' + cls + '">' + escapeHtml(quoted) + (colon ? escapeHtml(colon) : '') + '</span>';
+        })
+        .replace(/\btrue\b/g, '<span class="json-boolean-true">true</span>')
+        .replace(/\bfalse\b/g, '<span class="json-boolean-false">false</span>')
+        .replace(/\bnull\b/g, '<span class="json-null">null</span>')
+        .replace(/-?\d+\.?\d*([eE][+-]?\d+)?/g, '<span class="json-number">$&</span>')
+        .replace(/[{}[\],]/g, '<span class="json-bracket">$&</span>');
+    }
+
+    function renderTree(containerId, data) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = renderTreeRec(data, 0);
+    }
+
+    function renderTreeRec(obj, depth) {
+      if (obj === null) return '<span class="json-null">null</span>';
+      if (typeof obj !== 'object') return '<span class="json-string">' + escapeHtml(JSON.stringify(obj)) + '</span>';
+      const entries = Object.entries(obj);
+      if (entries.length === 0) return '<span class="json-bracket">{}</span>';
+      const inner = entries.map(([k, v]) => {
+        const isObj = typeof v === 'object' && v !== null && !Array.isArray(v) && Object.keys(v).length > 0;
+        const valHtml = isObj
+          ? '<div class="tree-node">' + renderTreeRec(v, depth + 1) + '</div>'
+          : '<span class="v">' + escapeHtml(JSON.stringify(v)) + '</span>';
+        const branchClass = isObj ? 'tree-branch' : '';
+        const keyTitle = KEY_ABBREVIATIONS[k] ? ' title="' + escapeHtml(KEY_ABBREVIATIONS[k]) + '"' : '';
+        return `<div class="${branchClass}"><div class="key-line">${isObj ? '<span class="expand">▼</span>' : '<span class="expand"></span>'}<span class="k"${keyTitle}>${escapeHtml(JSON.stringify(k))}</span>: ${valHtml}</div></div>`;
+      }).join('');
+      return inner;
+    }
+
+    function bindTreeCollapse(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.querySelectorAll('.tree-branch .key-line').forEach(line => {
+        line.addEventListener('click', () => {
+          const branch = line.closest('.tree-branch');
+          if (branch) branch.classList.toggle('collapsed');
+        });
+      });
+    }
+
+    function renderJson(containerId, data) {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      el.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+      el.classList.remove('hidden');
+    }
+
+    function showView(panel, view) {
+      const treeId = panel === 'amp' ? 'amp-tree' : 'mix-tree';
+      const jsonId = panel === 'amp' ? 'amp-json' : 'mix-json';
+      const treeEl = document.getElementById(treeId);
+      const jsonEl = document.getElementById(jsonId);
+      if (treeEl) treeEl.classList.toggle('hidden', view !== 'tree');
+      if (jsonEl) jsonEl.classList.toggle('hidden', view !== 'json');
+      document.querySelectorAll(`[data-panel="${panel}"]`).forEach(t => t.classList.toggle('active', t.dataset.view === view));
+    }
+
+    const searchEl = document.getElementById('search');
+    if (searchEl) searchEl.addEventListener('input', e => {
+      searchQuery = e.target.value.trim();
+      renderCommonList();
+    });
+
+    const sortEl = document.getElementById('sort');
+    if (sortEl) sortEl.addEventListener('change', e => {
+      sortBy = e.target.value;
+      renderCommonList();
+    });
+
+    const filterEl = document.getElementById('filter');
+    if (filterEl) filterEl.addEventListener('change', e => {
+      filterMode = e.target.value;
+      renderCommonList();
+    });
+
+    const beautifyAll = document.getElementById('beautify-all');
+    if (beautifyAll) beautifyAll.addEventListener('click', () => {
+      renderJson('amp-json', amplitudeData);
+      renderJson('mix-json', mixpanelData);
+      showView('amp', 'json');
+      showView('mix', 'json');
+    });
+
+    const btnOnlyCompare = document.getElementById('btn-only-compare');
+    if (btnOnlyCompare) {
+      btnOnlyCompare.addEventListener('click', () => {
+        const main = document.querySelector('main');
+        if (!main) return;
+        const isOnly = main.classList.toggle('only-compare');
+        btnOnlyCompare.textContent = isOnly ? 'Show all panels' : 'Only comparison';
+        btnOnlyCompare.title = isOnly ? 'Show Amplitude and Mixpanel panels' : 'Hide Amplitude and Mixpanel panels';
+      });
+    }
+
+    document.querySelectorAll('.view-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const { panel, view } = btn.dataset;
+        if (!view) return;
+        showView(panel, view);
+        if (view === 'json') {
+          if (panel === 'amp') renderJson('amp-json', amplitudeData);
+          else renderJson('mix-json', mixpanelData);
+        }
+      });
+    });
+
+    function copyJson(data, btn) {
+      navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+        const t = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = t; }, 1500);
+      });
+    }
+    const copyAmp = document.getElementById('copy-amp');
+    if (copyAmp) copyAmp.addEventListener('click', e => copyJson(amplitudeData, e.target));
+    const copyMix = document.getElementById('copy-mix');
+    if (copyMix) copyMix.addEventListener('click', e => copyJson(mixpanelData, e.target));
+
+    function initViews() {
+      renderTree('amp-tree', amplitudeData);
+      renderTree('mix-tree', mixpanelData);
+      bindTreeCollapse('amp-tree');
+      bindTreeCollapse('mix-tree');
+      renderCommonList();
+      renderSameValueList();
+    }
+
+    function init() {
+      initInputs();
+      initViews();
+    }
+
+    const btnHideInput = document.getElementById('btn-hide-input');
+    if (btnHideInput) {
+      btnHideInput.addEventListener('click', () => {
+        const section = document.getElementById('input-section');
+        if (!section) return;
+        const isCollapsed = section.classList.toggle('collapsed');
+        btnHideInput.textContent = isCollapsed ? 'Show input' : 'Hide input';
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>
