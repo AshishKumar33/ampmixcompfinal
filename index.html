@@ -649,7 +649,7 @@
     <div class="compare-bar">
       <button type="button" class="btn btn-primary" id="btn-compare">Compare</button>
       <button type="button" class="btn" id="btn-beautify-input">Beautify inputs</button>
-      <button type="button" class="btn" id="btn-clear">Clear</button>
+      <button type="button" class="btn" id="btn-clear" title="Clear inputs and stored data">Clear data</button>
       <span class="stats" id="parse-status"></span>
     </div>
   </section>
@@ -721,12 +721,30 @@
   </main>
 
   <script>
-    const defaultAmplitude = {"_time":1771432945458,"$insert_id":"5c12be03-252f-4b8e-a085-3bc88966ddd4","$schema":13,"amplitude_attribution_ids":null,"amplitude_id":133068988286,"app":362946,"city":"Noida","client_event_time":"2026-02-18 16:42:25.458000","client_upload_time":"2026-02-18 16:42:26.842000","country":"India","data":{"group_first_event":{},"group_ids":{},"path":"/2/httpapi"},"device_carrier":null,"device_family":"Mac","device_id":"c861863a-9fae-476b-98cb-9dd5c6897703","device_type":"Mac","display_name":"bookingConfirmation","dma":null,"event_id":5,"event_properties":{"deviceId":"c861863a-9fae-476b-98cb-9dd5c6897703","eventAction":"impression","eventCategory":"bookingConfirmation","eventLabel":"hotelReschedule","platform":"dweb","tiketSessionId":"46a12f1e-af64-4194-b62a-7aa957e0c786","trackingId":"UA-122503490-1","user.currency":"IDR","user.language":"EN","user.loginType":"TIKET","user.signupType":"TIKET","user.userId":"30178877","utmCampaign":"none","utmExternal":"organic","utmMedium":"none","utmSource":"none","vertical":"hotel"},"event_time":"2026-02-18 16:42:25.458000","event_type":"bookingConfirmation","group_properties":{},"groups":{},"ip_address":"122.161.66.20","language":"English","library":"amplitude-ts/1.10.2","location_lat":null,"location_lng":null,"os":"Chrome 144.0.0.0","os_name":"Chrome","os_version":"144.0.0.0","partner_id":null,"paying":null,"plan":{},"platform":"Web","processed_time":"2026-02-18 16:42:27.834000","region":"Uttar Pradesh","sample_rate":null,"server_received_time":"2026-02-18 16:42:26.842000","server_upload_time":"2026-02-18 16:42:26.845000","session_id":1771432872063,"source_id":null,"start_version":null,"timeline_hidden":false,"user_id":"30178877","user_properties":{"country":"SG","currency":"IDR","deviceId":"c861863a-9fae-476b-98cb-9dd5c6897703","isB2bCorp":"false","language":"EN","loginType":"TIKET","miniappsPartner":"none","referrer":"none","signupType":"TIKET","tagmpid":"none","tagttoclid":"none","tiketSessionId":"46a12f1e-af64-4194-b62a-7aa957e0c786","ttoclid":"none","userId":"30178877","utmCampaign":"none","utmExternal":"organic","utmId":"none","utmMedium":"none","utmSource":"none","utmTerm":"none"},"uuid":"23cbd1c1-cac4-418c-bd62-a445bc6dd113","version_name":null};
+    const STORAGE_KEY_AMP = 'ampmixcomp_amplitude';
+    const STORAGE_KEY_MIX = 'ampmixcomp_mixpanel';
 
-    const defaultMixpanel = {"event":"bookingConfirmation","properties":{"time":1771432945.438,"distinct_id":"30178877","$browser":"Chrome","$browser_version":144,"$city":"Noida","$current_url":"https://gatotkaca.tiket.com/en-sg/hotel/bookings/reschedule/checkout?orderId=1200876590&orderDetailId=1200958331&orderHash=4793EC2E15C7B7C5699579A3&adult=1&hotelId=kartika-chandra-hotel-108001534490281736&childAges=&night=1&room=1&roomId=5b77803e25a8fa6a6","$device_id":"c861863a-9fae-476b-98cb-9dd5c6897703","$initial_referrer":"https://gatotkaca.tiket.com/en-sg/hotel/bookings/reschedule?orderId=1200876590&orderDetailId=1200958331&orderHash=4793EC2E15C7B7C5699579A3&startDate=2026-03-13&night=1","$initial_referring_domain":"gatotkaca.tiket.com","$insert_id":"rxk89rhlh2nwfzlr","$lib_version":"2.73.0","$mp_api_endpoint":"api-js.mixpanel.com","$mp_api_timestamp_ms":1771432947460,"$mp_event_size":2121,"$mp_replay_id":"ed6fc8e1-9426-4b28-8fde-72bd7fd0b461","$os":"Mac OS X","$referrer":"https://gatotkaca.tiket.com/en-sg/hotel/bookings/reschedule?orderId=1200876590&orderDetailId=1200958331&orderHash=4793EC2E15C7B7C5699579A3&startDate=2026-03-13&night=1","$referring_domain":"gatotkaca.tiket.com","$region":"Uttar Pradesh","$screen_height":900,"$screen_width":1440,"$user_id":"30178877","commonAnalyticVersion":"0.0.0-alpha-1045-20260218033155","country":"SG","currency":"IDR","deviceId":"c861863a-9fae-476b-98cb-9dd5c6897703","eventAction":"impression","eventCategory":"bookingConfirmation","eventLabel":"hotelReschedule","isB2bCorp":"false","isEmailVerified":1,"isGuest":0,"isPhoneVerified":1,"language":"EN","loginType":"TIKET","miniappsPartner":"none","mp_country_code":"IN","mp_lib":"web","mp_processing_time_ms":1771432952835,"mp_sent_by_lib_version":"2.73.0","platform":"dweb","referrer":"none","signupType":"TIKET","tagmpid":"none","tagttoclid":"none","tiketSessionId":"46a12f1e-af64-4194-b62a-7aa957e0c786","trackingId":"UA-122503490-1","ttoclid":"none","unmUserId":"100007647","user":{"currency":"IDR","language":"EN","loginType":"TIKET","signupType":"TIKET","userId":"30178877"},"userId":"30178877","utmAttributedAt":"2026-02-18T22:57:38","utmCampaign":"none","utmContent":"none","utmExternal":"organic","utmId":"none","utmMedium":"none","utmSource":"none","utmTerm":"none","vertical":"hotel"}};
+    function saveToStorage() {
+      try {
+        const inputAmp = document.getElementById('input-amp');
+        const inputMix = document.getElementById('input-mix');
+        if (inputAmp) localStorage.setItem(STORAGE_KEY_AMP, inputAmp.value);
+        if (inputMix) localStorage.setItem(STORAGE_KEY_MIX, inputMix.value);
+      } catch (_) {}
+    }
 
-    let amplitudeData = JSON.parse(JSON.stringify(defaultAmplitude));
-    let mixpanelData = JSON.parse(JSON.stringify(defaultMixpanel));
+    function loadFromStorage() {
+      try {
+        const amp = localStorage.getItem(STORAGE_KEY_AMP);
+        const mix = localStorage.getItem(STORAGE_KEY_MIX);
+        return { amp: amp != null ? amp : '', mix: mix != null ? mix : '' };
+      } catch (_) {
+        return { amp: '', mix: '' };
+      }
+    }
+
+    let amplitudeData = {};
+    let mixpanelData = {};
 
     // Line numbers for textareas
     function updateLineNumbers(textareaId, lineNumsId) {
@@ -744,17 +762,27 @@
     }
 
     function initInputs() {
+      const stored = loadFromStorage();
       const inputAmp = document.getElementById('input-amp');
       const inputMix = document.getElementById('input-mix');
-      if (inputAmp) inputAmp.value = JSON.stringify(defaultAmplitude, null, 2);
-      if (inputMix) inputMix.value = JSON.stringify(defaultMixpanel, null, 2);
+      if (inputAmp) inputAmp.value = stored.amp;
+      if (inputMix) inputMix.value = stored.mix;
+      if (stored.amp) {
+        try { amplitudeData = JSON.parse(stored.amp); } catch (_) {}
+      }
+      if (stored.mix) {
+        try { mixpanelData = JSON.parse(stored.mix); } catch (_) {}
+      }
       updateLineNumbers('input-amp', 'line-nums-amp');
       updateLineNumbers('input-mix', 'line-nums-mix');
       ['input-amp', 'input-mix'].forEach(id => {
         const ta = document.getElementById(id);
         const lineNumsId = id === 'input-amp' ? 'line-nums-amp' : 'line-nums-mix';
         if (ta) {
-          ta.addEventListener('input', () => updateLineNumbers(id, lineNumsId));
+          ta.addEventListener('input', () => {
+            updateLineNumbers(id, lineNumsId);
+            saveToStorage();
+          });
           ta.addEventListener('scroll', () => syncScroll(id, lineNumsId));
         }
       });
@@ -788,6 +816,7 @@
       }
       document.getElementById('parse-status').textContent = ampOk && mixOk ? 'Both parsed. Comparison updated.' : '';
       if (!ampOk || !mixOk) return;
+      saveToStorage();
       refreshComparison();
     }
 
@@ -820,7 +849,11 @@
 
     const btnClear = document.getElementById('btn-clear');
     if (btnClear) btnClear.addEventListener('click', () => {
-      if (!confirm('Do you want to delete input data and clear the comparison?')) return;
+      if (!confirm('Clear all input data and stored data? This cannot be undone.')) return;
+      try {
+        localStorage.removeItem(STORAGE_KEY_AMP);
+        localStorage.removeItem(STORAGE_KEY_MIX);
+      } catch (_) {}
       const inputAmp = document.getElementById('input-amp');
       const inputMix = document.getElementById('input-mix');
       if (inputAmp) inputAmp.value = '';
@@ -831,7 +864,8 @@
       updateLineNumbers('input-mix', 'line-nums-mix');
       showInputError('amp', '');
       showInputError('mix', '');
-      document.getElementById('parse-status').textContent = '';
+      const statusEl = document.getElementById('parse-status');
+      if (statusEl) statusEl.textContent = '';
       refreshComparison();
     });
 
